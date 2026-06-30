@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Enrollment System (CRUD)</title>
+    <link rel="icon" type="image/png" href="AcadLinkFav.png">
+    <title>AcadLink</title>
     <style>
         :root {
             --primary: #2b6cb0;
@@ -28,6 +29,19 @@
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-brand {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .header-brand img {
+            width: 140px;
+            max-width: 100%;
+            height: auto;
+            display: block;
         }
 
         h2 {
@@ -106,6 +120,9 @@
 <body>
 
 <div class="container">
+    <div class="header-brand">
+        <img src="AcadLink Logo.png" alt="AcadLink logo">
+    </div>
     <h2>Student Enrollment System</h2>
 
     <form id="studentForm">
@@ -155,7 +172,25 @@
     </table>
 </div>
 
-<script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxNlr3fpnwCV0btSAuUyVTfIy_N2BmQVs",
+      authDomain: "acadlinks.firebaseapp.com",
+      projectId: "acadlinks",
+      storageBucket: "acadlinks.firebasestorage.app",
+      messagingSenderId: "921218124371",
+      appId: "1:921218124371:web:23282b127965b8466f94a6",
+      measurementId: "G-HQCTZ9XJTH"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+
     // --- STATE MANAGEMENT ---
     // Load existing data from localStorage, or initialize an empty array if none exists
     let students = JSON.parse(localStorage.getItem('students')) || [];
