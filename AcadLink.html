@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Enrollment System (CRUD)</title>
+    <style>
+        :root {
+            --primary: #2b6cb0;
+            --success: #38a169;
+            --danger: #e53e3e;
+            --dark: #2d3748;
+            --light: #f7fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: #2b5c8f; }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-secondary { background-color: #718096; color: white; }
+
+        .form-buttons {
+            margin-top: 20px;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background-color: #edf2f7;
+            color: var(--dark);
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .actions button {
+            padding: 5px 10px;
+            font-size: 0.85em;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Student Enrollment System</h2>
+
+    <form id="studentForm">
+        <input type="hidden" id="studentId">
+        
+        <div class="form-group">
+            <label for="studentName">Full Name</label>
+            <input type="text" id="studentName" required placeholder="John Doe">
+        </div>
+
+        <div class="form-group">
+            <label for="studentEmail">Email Address</label>
+            <input type="email" id="studentEmail" required placeholder="john@example.com">
+        </div>
+
+        <div class="form-group">
+            <label for="course">Course / Program</label>
+            <select id="course" required>
+                <option value="">-- Select a Course --</option>
+                <option value="BS Information Systems">BS Information Systems</option>
+                <option value="BS Business Administration">BS Business Administration</option>
+                <option value="BS Computer Science">BS Computer Science</option>
+            </select>
+        </div>
+
+        <div class="form-buttons">
+            <button type="submit" id="submitBtn" class="btn-primary">Enroll Student</button>
+            <button type="button" id="cancelBtn" class="btn-secondary" style="display: none;" onclick="clearForm()">Cancel Edit</button>
+        </div>
+    </form>
+
+    <hr style="margin-top: 40px; border: 0; border-top: 1px solid #e2e8f0;">
+
+    <h3>Enrolled Students</h3>
+    <table id="studentTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Course</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="studentTableBody">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    // --- STATE MANAGEMENT ---
+    // Load existing data from localStorage, or initialize an empty array if none exists
+    let students = JSON.parse(localStorage.getItem('students')) || [];
+
+    // --- DOM ELEMENTS ---
+    const studentForm = document.getElementById('studentForm');
+    const studentIdInput = document.getElementById('studentId');
+    const studentNameInput = document.getElementById('studentName');
+    const studentEmailInput = document.getElementById('studentEmail');
+    const courseInput = document.getElementById('course');
+    const submitBtn = document.getElementById('submitBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const studentTableBody = document.getElementById('studentTableBody');
+
+    // --- CRUD FUNCTIONS ---
+
+    // 1. CREATE & UPDATE handler
+    studentForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent page refresh
+
+        const id = studentIdInput.value;
+        const name = studentNameInput.value.trim();
+        const email = studentEmailInput.value.trim();
+        const course = courseInput.value;
+
+        if (!name || !email || !course) {
+            alert('Please complete all fields before saving.');
+            return;
+        }
+
+        const studentData = {
+            id: id || Date.now().toString(),
+            name: name,
+            email: email,
+            course: course
+        };
+
+        saveStudent(studentData);
+        clearForm();
+    });
+
+    // 2. READ (Render table data)
+    function renderTable() {
+        studentTableBody.innerHTML = ''; // Clear old rows
+
+        if (students.length === 0) {
+            studentTableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align:center; color:#a0aec0;">No students enrolled yet.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        students.forEach((student, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${student.name}</td>
+                <td>${student.email}</td>
+                <td>${student.course}</td>
+                <td class="actions">
+                    <button class="btn-success" onclick="editStudent('${student.id}')">Edit</button>
+                    <button class="btn-danger" onclick="deleteStudent('${student.id}')">Delete</button>
+                </td>
+            `;
+            studentTableBody.appendChild(row);
+        });
+    }
+
+    // 3. EDIT populate helper (Pre-fills form for updating)
+    function editStudent(id) {
+        const student = students.find(s => s.id === id);
+        if (student) {
+            studentIdInput.value = student.id;
+            studentNameInput.value = student.name;
+            studentEmailInput.value = student.email;
+            courseInput.value = student.course;
+
+            // Change UI layout to indicate editing mode
+            submitBtn.textContent = "Update Student Info";
+            submitBtn.className = "btn-success";
+            cancelBtn.style.display = "inline-block";
+        }
+    }
+
+    // 4. DELETE handler
+    function deleteStudent(id) {
+        if (confirm("Are you sure you want to remove this student?")) {
+            students = students.filter(student => student.id !== id);
+            saveAndRefresh();
+            // If deleting a student that was currently being edited, reset the form
+            if (studentIdInput.value === id) {
+                clearForm();
+            }
+        }
+    }
+
+    // --- UTILITY FUNCTIONS ---
+
+    function saveStudent(studentData) {
+        const existingIndex = students.findIndex(student => student.id === studentData.id);
+        if (existingIndex >= 0) {
+            students[existingIndex] = studentData;
+        } else {
+            students.push(studentData);
+        }
+        saveAndRefresh();
+    }
+
+    // Sync array to local storage and update UI layout
+    function saveAndRefresh() {
+        localStorage.setItem('students', JSON.stringify(students));
+        renderTable();
+    }
+
+    // Reset the form to its original state
+    function clearForm() {
+        studentForm.reset();
+        studentIdInput.value = "";
+        submitBtn.textContent = "Enroll Student";
+        submitBtn.className = "btn-primary";
+        cancelBtn.style.display = "none";
+    }
+
+    // Initial load call to display existing data on page startup
+    renderTable();
+</script>
+
+</body>
+</html>
